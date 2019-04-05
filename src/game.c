@@ -10,7 +10,7 @@
 #include "ds_spatial_hash.h"
 #include "ds_adj_graph.h"
 
-int main(int argc, char * argv[])
+int main(int argc, char **argv)
 {
 	/*variable declarations*/
 	int done = 0;
@@ -31,12 +31,12 @@ int main(int argc, char * argv[])
 	static Body body[10000];// not a pointer!
 	Shape shape[4];// not a pointer!
 				   /*program initializtion*/
-	List * spaceArray[100];
-	int setter = 0;
+	//List * spaceArray[100];
+	//int setter = 0;
 
-	Hashmap * spaceHashmap = NULL;
-	Sprite * diagram = NULL;
-	AdjGraph * graph = adjgraph_new(6);
+	//Hashmap * spaceHashmap = NULL;
+	//Sprite * diagram = NULL;
+	//AdjGraph * graph = adjgraph_new(6);
 
 	init_logger("gf2d.log");
 	slog("---==== BEGIN ====---");
@@ -55,7 +55,7 @@ int main(int argc, char * argv[])
 	/*demo setup*/
 	sprite = gf2d_sprite_load_image("images/backgrounds/bg_flat.png");
 	mouse = gf2d_sprite_load_all("images/pointer.png", 32, 32, 16);
-	diagram = gf2d_sprite_load_image("images/diagram.png");
+	//diagram = gf2d_sprite_load_image("images/diagram.png");
 
 	space = gf2d_space_new_full(
 		3,
@@ -70,7 +70,7 @@ int main(int argc, char * argv[])
 	{
 		spaceArray[setter] = gf2d_list_new();
 	}*/
-	graph = adjgraph_add_edge(graph, 0, 1);
+	/*graph = adjgraph_add_edge(graph, 0, 1);
 	graph = adjgraph_add_edge(graph, 0, 4);
 	graph = adjgraph_add_edge(graph, 1, 4);
 	graph = adjgraph_add_edge(graph, 2, 1);
@@ -78,12 +78,12 @@ int main(int argc, char * argv[])
 	graph = adjgraph_add_edge(graph, 3, 4);
 	graph = adjgraph_add_edge(graph, 4, 5);
 	adjgraph_print(graph);
-	adjgraph_topological_sort(graph);
+	adjgraph_topological_sort(graph);*/
 
-	shape[0] = gf2d_shape_circle(0, 0, 5);
-	shape[1] = gf2d_shape_circle(20, 0, 25);
-	shape[2] = gf2d_shape_rect(-32, -32, 64, 64);
-	shape[3] = gf2d_shape_rect(-16, -16, 32, 32);
+	//shape[0] = gf2d_shape_circle(0, 0, 5);
+	//shape[1] = gf2d_shape_circle(20, 0, 25);
+	//shape[2] = gf2d_shape_rect(-32, -32, 64, 64);
+	//shape[3] = gf2d_shape_rect(-16, -16, 32, 32);
 
 	//gf2d_space_add_static_shape(space,gf2d_shape_rect(200,500, 512,32));
 	/* Stress test*/
@@ -234,7 +234,7 @@ int main(int argc, char * argv[])
 			&mouseColor,
 			(int)mf);
 
-		gf2d_sprite_draw_image(diagram, vector2d(400, 200));
+		//gf2d_sprite_draw_image(diagram, vector2d(400, 200));
 
 		gf2d_grahics_next_frame();// render current draw frame and skip to the next frame
 
@@ -243,7 +243,7 @@ int main(int argc, char * argv[])
 	}
 
 	gf2d_space_free(space);
-	hashmap_clear(spaceHashmap);
+	//hashmap_clear(spaceHashmap);
 	slog("---==== END ====---");
 	return 0;
 }

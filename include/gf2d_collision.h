@@ -1,6 +1,9 @@
 #ifndef __GF2D_COLLISION_H__
 #define __GF2D_COLLISION_H__
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #include "gf2d_shape.h"
 #include "gf2d_list.h"
 #include "gf2d_text.h"
