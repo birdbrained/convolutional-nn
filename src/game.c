@@ -1,4 +1,5 @@
 #include <SDL.h>
+#include <SDL_image.h>
 #include <stdio.h>
 #include <string.h>
 #include "gf2d_graphics.h"
@@ -9,6 +10,7 @@
 #include "ds_hashmap.h"
 #include "ds_spatial_hash.h"
 #include "ds_adj_graph.h"
+#include "convo_nn.h"
 
 int main(int argc, char **argv)
 {
@@ -38,10 +40,12 @@ int main(int argc, char **argv)
 	//Sprite * diagram = NULL;
 	//AdjGraph * graph = adjgraph_new(6);
 
+	SDL_Surface *pixel_tester = NULL;
+
 	init_logger("gf2d.log");
 	slog("---==== BEGIN ====---");
 	gf2d_graphics_initialize(
-		"Topological sort (look at slogs)",
+		"Convolutional Neural Network Test",
 		1200,
 		720,
 		1200,
@@ -56,6 +60,9 @@ int main(int argc, char **argv)
 	sprite = gf2d_sprite_load_image("images/backgrounds/bg_flat.png");
 	mouse = gf2d_sprite_load_all("images/pointer.png", 32, 32, 16);
 	//diagram = gf2d_sprite_load_image("images/diagram.png");
+
+	pixel_tester = IMG_Load("images/x.png");
+	pixel_test(pixel_tester);
 
 	space = gf2d_space_new_full(
 		3,
