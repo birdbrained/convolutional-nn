@@ -8,7 +8,10 @@ typedef struct image_feature_manager_s
 
 static ImageFeatureManager manager = { NULL, 0 };
 
-void if_manager_close()
+/**
+ * @brief Closes the Image Feature Manager, called from atexit() by imf_manager_init
+ */
+void imf_manager_close()
 {
 	int i = 0;
 
@@ -16,7 +19,7 @@ void if_manager_close()
 	{
 		for (i = 0; i < manager.max_image_features; i++)
 		{
-			if_free(&manager.image_features[i]);
+			imf_free(&manager.image_features[i]);
 		}
 		free(manager.image_features);
 	}
@@ -24,12 +27,12 @@ void if_manager_close()
 	slog("Image Feature manager closed.");
 }
 
-void if_manager_init(Uint32 max_image_features)
+void imf_manager_init(Uint32 max_image_features)
 {
 	if (max_image_features <= 0)
 	{
-		slog("Warning: Cannot initialize Image Feature Manager for 0 Image Features, setting to 1024");
-		max_image_features = 1024;
+		slog("Warning: Cannot initialize Image Feature Manager for 0 Image Features, setting to DEFAULT_MAX_IMAGE_FEATURES (%i)", DEFAULT_MAX_IMAGE_FEATURES);
+		max_image_features = DEFAULT_MAX_IMAGE_FEATURES;
 	}
 
 	manager.image_features = (ImageFeature *)malloc(sizeof(ImageFeature) * max_image_features);
@@ -40,11 +43,11 @@ void if_manager_init(Uint32 max_image_features)
 	}
 	memset(manager.image_features, 0, sizeof(ImageFeature) * max_image_features);
 	manager.max_image_features = max_image_features;
-	atexit(if_manager_close);
+	atexit(imf_manager_close);
 	slog("Image Feature manager initialized");
 }
 
-ImageFeature * if_new()
+ImageFeature *imf_new()
 {
 	int i = 0;
 
@@ -57,10 +60,40 @@ ImageFeature * if_new()
 			return &manager.image_features[i];
 		}
 	}
+	slog("Error: Out of memory address for a new image feature!");
 	return NULL;
 }
 
-ImageFeature * if_new_from_surface(SDL_Surface *surface)
+ImageFeature *imf_new_with_pixels_array(Uint32 width, Uint32 height)
+{
+	ImageFeature *imf = NULL;
+
+	if (width <= 0 || height <= 0)
+	{
+		slog("Error: Cannot initialize an image feature that has 0 width or height. W (%i) H (%i)", width, height);
+		return NULL;
+	}
+
+	imf = imf_new();
+	if (!imf)
+	{
+		return NULL;
+	}
+
+	imf->pixels = (float *)malloc(sizeof(float) * width * height);
+	if (!imf->pixels)
+	{
+		slog("Error: Could not allocate space for the pixels array of the image feature!");
+		imf_free(imf);
+		return NULL;
+	}
+	memset(imf->pixels, 0, sizeof(float) * width * height);
+	imf->width = width;
+	imf->height = height;
+	return imf;
+}
+
+ImageFeature * imf_new_from_surface(SDL_Surface *surface)
 {
 	ImageFeature *feature = NULL;
 	SDL_PixelFormat *format;
@@ -73,7 +106,7 @@ ImageFeature * if_new_from_surface(SDL_Surface *surface)
 		slog("Error: Cannot create an Image Feature from a NULL surface");
 		return NULL;
 	}
-	feature = if_new();
+	feature = imf_new();
 	if (!feature)
 	{
 		return NULL;
@@ -95,7 +128,7 @@ ImageFeature * if_new_from_surface(SDL_Surface *surface)
 	return NULL;
 }
 
-int if_free(ImageFeature *image_feature)
+int imf_free(ImageFeature *image_feature)
 {
 	if (!image_feature)
 	{
@@ -125,15 +158,17 @@ void set_pixel(SDL_Surface *surface, int x, int y, Uint32 pixel)
 
 int evaluate_pixel(int r, int g, int b)
 {
-	return 0;
+	if (r == 0 && g == 0 && b == 0)
+		return -1;
+	return 1;
 }
 
-void pixel_test(SDL_Surface *surface)
+ImageFeature *imf_determine_feature_weights(SDL_Surface *surface)
 {
+	ImageFeature *imf = NULL;
 	Uint32 *pixels;
 	Uint8 *p;
 	Uint32 pixel = 0;
-	SDL_PixelFormat *format;
 	int bpp = 0;
 	int r = 0, g = 0, b = 0, i = 0, x = 0, y = 0, max = 0;
 	if (!surface)
@@ -143,23 +178,15 @@ void pixel_test(SDL_Surface *surface)
 	}
 
 	bpp = surface->format->BytesPerPixel;
-	format = surface->format;
 	SDL_LockSurface(surface);
 	pixels = (Uint32 *)surface->pixels;
 	//format = SDL_GetWindowPixelFormat(gf2d_graphics_get_window());
 	max = surface->w * surface->h;
-	/*for (i = 0; i < max; i++)
+	imf = imf_new_with_pixels_array(surface->w, surface->h);
+	if (!imf)
 	{
-		if (i != 0)
-		{
-			*pixels << 8;
-		}
-		r = 0;
-		b = 0;
-		g = 0;
-		SDL_GetRGB(pixels[i], format, &r, &g, &b);
-		slog("Pixel (%i): r (%i) g (%i) b (%i)", i, r, g, b);
-	}*/
+		return NULL;
+	}
 
 	for (y = 0; y < surface->h; y++)
 	{
@@ -192,9 +219,30 @@ void pixel_test(SDL_Surface *surface)
 					break;
 			}
 
-			SDL_GetRGB(pixel, format, &r, &g, &b);
+			SDL_GetRGB(pixel, surface->format, &r, &g, &b);
 			slog("Pixel (%i): r (%i) g (%i) b (%i)", i, r, g, b);
+			imf->pixels[i] = evaluate_pixel(r, g, b);
+			i++;
 		}
 	}
 	SDL_UnlockSurface(surface);
+
+	return imf;
+}
+
+void log_pixels(ImageFeature * image_feature)
+{
+	int i = 0, max = 0;
+
+	if (!image_feature)
+	{
+		slog("no");
+		return NULL;
+	}
+
+	max = image_feature->width * image_feature->height;
+	for (i = 0; i < max; i++)
+	{
+		slog("Index (%i) Value (%f)", i, image_feature->pixels[i]);
+	}
 }

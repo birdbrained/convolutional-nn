@@ -41,6 +41,7 @@ int main(int argc, char **argv)
 	//AdjGraph * graph = adjgraph_new(6);
 
 	SDL_Surface *pixel_tester = NULL;
+	ImageFeature *feature = NULL;
 
 	init_logger("gf2d.log");
 	slog("---==== BEGIN ====---");
@@ -54,6 +55,7 @@ int main(int argc, char **argv)
 		0);
 	gf2d_graphics_set_frame_delay(16);
 	gf2d_sprite_init(1024);
+	imf_manager_init(1024);
 	SDL_ShowCursor(SDL_DISABLE);
 
 	/*demo setup*/
@@ -62,7 +64,8 @@ int main(int argc, char **argv)
 	//diagram = gf2d_sprite_load_image("images/diagram.png");
 
 	pixel_tester = IMG_Load("images/x.png");
-	pixel_test(pixel_tester);
+	feature = imf_determine_feature_weights(pixel_tester);
+	log_pixels(feature);
 
 	space = gf2d_space_new_full(
 		3,
